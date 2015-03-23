@@ -1,0 +1,23 @@
+Fork du dépôt Github Heimdali de David
+
+- dans Github, on peut faire un fork de n'importe
+  quel dépôt (bouton Fork this project): ceci créer
+  une copie de ce dépôt dans notre compte. On peut
+  alors y travailler et lorsqu'on a terminé, on peut
+  faire une requête 'git pull' pour que le sité forké
+  incorpore éventuellement nos modifs.
+
+- après le fork, on clone, on y travaille, on commit
+  on pousse.
+
+- on fait le git pull request depuis le site GitHUB
+
+- il peut être important de maintenir notre dépôt forké
+  à jour avec le dépôt original:
+  - on ajoute le dépôt original comme un site distant
+    $ git remote add upstream adresse-du-depot
+  - on fusionne notre dépôt avec l'original (merge ou rebase), ici avec rebase
+    $ git fetch upstream develop  # pour moi, c'est la branch develop qui m'intéresse
+    $ git rebase
+  - puis on pousse notre copie locale, a jour avec le site original, vers notre dépôt github
+    $ git push origin develop
