@@ -73,10 +73,19 @@ is_floating_point_type(itk::ImageIOBase::Pointer io)
         case itk::ImageIOBase::UINT:
             return false;
             break;
+        case itk::ImageIOBase::CHAR:
+            return false;
+            break;
+        case itk::ImageIOBase::SHORT:
+            return false;
+            break;
+        case itk::ImageIOBase::INT:
+            return false;
+            break;
         default:
             error_msg
                 << "Expected pixel component type to be "
-                << "FLOAT, DOUBLE, UCHAR, USHORT or UINT"
+                << "FLOAT, DOUBLE, CHAR, UCHAR, SHORT, USHORT, INT or UINT"
                 << "but, got " << io->GetComponentTypeAsString(io->GetComponentType());
             throw(Heimdali::Exception(error_msg.str()));
             break;

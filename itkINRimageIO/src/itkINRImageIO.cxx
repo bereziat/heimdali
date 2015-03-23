@@ -71,6 +71,7 @@ number of columns times the number of values in a pixel.
 
 extern struct error error_;
 #define inr_erreur(ier) { error_.retadr = (int(*)())-1; ier = setjmp(error_.retenv); }
+extern int debug_;
 
 namespace itk
 {
@@ -85,11 +86,13 @@ INRImageIO::INRImageIO():
   m_InrVerif((char*)""),
   m_InrIsInitialized(false)
 {
-    m_InrArgc = 1;
+    m_InrArgc = 2;
     m_InrArgv = new char*[m_InrArgc]();
 
     m_InrArgv[0] = new char[ strlen("INRImageIO") + 1];
+    m_InrArgv[1] = new char[ strlen("-D") + 1];
     strcpy(m_InrArgv[0], "INRImageIO");
+    strcpy(m_InrArgv[1], "-D");
 
     this->AddSupportedWriteExtension(".inr");
     // DOM: pour moi, non.
@@ -123,13 +126,6 @@ bool INRImageIO ::CanWriteFile(const char *name) {
        && ( mhaPos == filename.length() - 4 ) )
     {
     return true; 
-    }
-
-  std::string::size_type mhdPos = filename.rfind(".inr.gz");
-  if ( ( mhdPos != std::string::npos ) 
-       && ( mhdPos == filename.length() - 7 ) )
-    {
-    return true;
     }
 
   return false;
@@ -176,6 +172,7 @@ void INRImageIO::Read(void *buffer)
   ImageIORegion regionToRead = this->GetIORegion();
 
   // Open image.
+  std::cerr << "INRImageIO::Read" << std::endl;
   m_InrImage = c_image( (char*) m_FileName.c_str(), (char*) m_InrMode.c_str(), 
       (char*) m_InrVerif.c_str(), m_InrFmt);
 
@@ -246,6 +243,8 @@ void INRImageIO::Read(void *buffer)
 
   // Or the whole image?
   } else {
+    std::cerr << "##### HERE ##### " << __LINE__ << std::endl;
+    
       c_lect(m_InrImage,m_InrFmt[I_DIMY],buffer);
 
       if( m_InrFmt[I_BSIZE] < 0 && value_size != 8*(-m_InrFmt[I_BSIZE])) {
@@ -292,7 +291,7 @@ void INRImageIO ::Write(const void *buffer)
   m_InrFmt[I_DIMX] = m_InrFmt[I_NDIMX]*m_InrFmt[I_NDIMV];
   m_InrFmt[I_DIMY] = m_InrFmt[I_NDIMY]*m_InrFmt[I_NDIMZ];
 
-  m_InrFmt[I_EXP] = 200;
+  m_InrFmt[I_EXP] = 0;
 
   const int inr_integer = 0;
   const int inr_real = 1;
@@ -313,23 +312,39 @@ void INRImageIO ::Write(const void *buffer)
           m_InrFmt[I_TYPE] = inr_integer;
           m_InrFmt[I_BSIZE] = 1;
           break;
+      case ImageIOBase::CHAR:
+          m_InrFmt[I_TYPE] = inr_integer;
+          m_InrFmt[I_BSIZE] = 1;
+	  m_InrFmt[I_EXP] = -200;
+          break;
       case ImageIOBase::USHORT:
           m_InrFmt[I_TYPE] = inr_integer;
           m_InrFmt[I_BSIZE] = 2;
           break;
+      case ImageIOBase::SHORT:
+          m_InrFmt[I_TYPE] = inr_integer;
+          m_InrFmt[I_BSIZE] = 2;
+	  m_InrFmt[I_EXP] = -200;
+          break;	  
       case ImageIOBase::UINT:
           m_InrFmt[I_TYPE] = inr_integer;
           m_InrFmt[I_BSIZE] = 4;
           break;
+      case ImageIOBase::INT:
+          m_InrFmt[I_TYPE] = inr_integer;
+          m_InrFmt[I_BSIZE] = 4;
+	  m_InrFmt[I_EXP] = -200;
+          break;
       default:
         itkExceptionMacro(
             << "Expected pixel component type to be"
-            << "FLOAT, DOUBLE, UCHAR, USHORT or UINT"
+            << "FLOAT, DOUBLE, CHAR, UCHAR, SHORT, USHORT, INT or UINT"
             << "but, got " << this->GetComponentTypeAsString(this->GetComponentType()));
           break;
   }
 
   // Open image.
+  std::cerr << "INRImageIO::Write" << std::endl;
   m_InrImage = c_image( (char*) m_FileName.c_str(), (char*)"c", (char*)"", m_InrFmt);
 
   // Set image format.
@@ -500,9 +515,12 @@ bool itk::INRImageIO::CanReadFile(const char *FileNameToRead)
 
   if (ier == 0)
   {
+      std::cerr << "INRImageIO::CanReadFile: " << FileNameToRead << std::endl;
       m_InrImage = c_image( (char*) FileNameToRead, (char*) m_InrMode.c_str(), 
-          (char*) m_InrVerif.c_str(), m_InrFmt);
+			    (char*) m_InrVerif.c_str(), m_InrFmt);
+    
       canread = true;
+      std::cerr << "##### HERE ##### " << __LINE__ << std::endl;
   }
   else
   {
@@ -591,13 +609,13 @@ void itk::INRImageIO::ReadImageInformation()
 	 int valsize = m_InrFmt[I_BSIZE] < 0 ? (7-m_InrFmt[I_BSIZE])/8 : m_InrFmt[I_BSIZE];
            switch (valsize) {
              case 1:
-               this->m_ComponentType = UCHAR;
+               this->m_ComponentType = m_InrFmt[I_EXP] < 0 ? CHAR : UCHAR;
                break;
              case 2:
-               this->m_ComponentType = USHORT;
+               this->m_ComponentType = m_InrFmt[I_EXP] < 0 ? SHORT : USHORT;
                break;
              case 4:
-               this->m_ComponentType = UINT;
+               this->m_ComponentType = m_InrFmt[I_EXP] < 0 ? INT : UINT;
                break;
              default:
                 itkExceptionMacro(<< "Expected integer pixel component byte size to be 1, 2 or 4"

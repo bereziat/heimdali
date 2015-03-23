@@ -97,11 +97,20 @@ int main( int argc, char ** argv )
         case itk::ImageIOBase::UCHAR:
             convert<unsigned char>(inputFilename, outputFilename);
             break;
+        case itk::ImageIOBase::CHAR:
+            convert<char>(inputFilename, outputFilename);
+            break;
         case itk::ImageIOBase::USHORT:
             convert<unsigned short>(inputFilename, outputFilename);
             break;
+        case itk::ImageIOBase::SHORT:
+            convert<short>(inputFilename, outputFilename);
+            break;
         case itk::ImageIOBase::UINT:
             convert<unsigned int>(inputFilename, outputFilename);
+            break;
+        case itk::ImageIOBase::INT:
+            convert<int>(inputFilename, outputFilename);
             break;
         case itk::ImageIOBase::FLOAT:
             convert<float>(inputFilename, outputFilename);
@@ -112,7 +121,7 @@ int main( int argc, char ** argv )
         default:
              error_msg 
              << "Expected pixel component type to be "
-             << "FLOAT, DOUBLE, UCHAR, USHORT or UINT "
+             << "FLOAT, DOUBLE, CHAR, UCHAR, SHORT, USHORT, INT or UINT "
              << "but, got "
              << itk::ImageIOBase::GetComponentTypeAsString(type);
             throw(Heimdali::Exception(error_msg.str()));
@@ -122,4 +131,5 @@ int main( int argc, char ** argv )
     } // End of 'try' block.
 
     HEIMDALI_CATCH_EXCEPTIONS(argv[0]);
+
 }
