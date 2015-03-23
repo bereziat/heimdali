@@ -86,14 +86,19 @@ INRImageIO::INRImageIO():
   m_InrVerif((char*)""),
   m_InrIsInitialized(false)
 {
+#ifdef DEBUG_INRIMAGE
     m_InrArgc = 2;
+#else
+    m_InrArgc = 1;
+#endif
     m_InrArgv = new char*[m_InrArgc]();
 
     m_InrArgv[0] = new char[ strlen("INRImageIO") + 1];
-    m_InrArgv[1] = new char[ strlen("-D") + 1];
     strcpy(m_InrArgv[0], "INRImageIO");
+#ifdef DEBUG_INRIMAGE
+    m_InrArgv[1] = new char[ strlen("-D") + 1];
     strcpy(m_InrArgv[1], "-D");
-
+#endif
     this->AddSupportedWriteExtension(".inr");
     // DOM: pour moi, non.
     // this->AddSupportedWriteExtension(".vel");
@@ -172,7 +177,6 @@ void INRImageIO::Read(void *buffer)
   ImageIORegion regionToRead = this->GetIORegion();
 
   // Open image.
-  std::cerr << "INRImageIO::Read" << std::endl;
   m_InrImage = c_image( (char*) m_FileName.c_str(), (char*) m_InrMode.c_str(), 
       (char*) m_InrVerif.c_str(), m_InrFmt);
 
@@ -243,8 +247,6 @@ void INRImageIO::Read(void *buffer)
 
   // Or the whole image?
   } else {
-    std::cerr << "##### HERE ##### " << __LINE__ << std::endl;
-    
       c_lect(m_InrImage,m_InrFmt[I_DIMY],buffer);
 
       if( m_InrFmt[I_BSIZE] < 0 && value_size != 8*(-m_InrFmt[I_BSIZE])) {
@@ -344,7 +346,6 @@ void INRImageIO ::Write(const void *buffer)
   }
 
   // Open image.
-  std::cerr << "INRImageIO::Write" << std::endl;
   m_InrImage = c_image( (char*) m_FileName.c_str(), (char*)"c", (char*)"", m_InrFmt);
 
   // Set image format.
@@ -515,12 +516,10 @@ bool itk::INRImageIO::CanReadFile(const char *FileNameToRead)
 
   if (ier == 0)
   {
-      std::cerr << "INRImageIO::CanReadFile: " << FileNameToRead << std::endl;
       m_InrImage = c_image( (char*) FileNameToRead, (char*) m_InrMode.c_str(), 
 			    (char*) m_InrVerif.c_str(), m_InrFmt);
     
       canread = true;
-      std::cerr << "##### HERE ##### " << __LINE__ << std::endl;
   }
   else
   {
